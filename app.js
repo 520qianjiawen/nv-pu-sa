@@ -616,6 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const rouletteCardContainer = document.getElementById('roulette-card-container');
   const rouletteBanner = document.getElementById('roulette-banner');
   const rouletteAvatar = document.getElementById('roulette-avatar');
+  const rouletteAvatarLink = document.getElementById('roulette-avatar-link');
   const rouletteTag = document.getElementById('roulette-tag');
   const rouletteName = document.getElementById('roulette-name');
   const rouletteVerified = document.getElementById('roulette-verified');
@@ -1162,16 +1163,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const tag = isTopTier ? 'Top Creator' : 'Creator';
 
     spotlightContent.innerHTML = `
-      <div class="spotlight-avatar-wrap" onclick="window.trackBloggerClick('${escapeHtml(user.screen_name)}', 'card'); window.open('https://x.com/${user.screen_name}', '_blank')">
+      <a class="spotlight-avatar-wrap" href="https://x.com/${user.screen_name}" target="_blank" rel="noopener noreferrer" onclick="window.trackBloggerClick('${escapeHtml(user.screen_name)}', 'spotlight_avatar');" title="直达 @${escapeHtml(user.screen_name)} 的 X 个人主页">
         <img class="spotlight-avatar" src="${avatar}" alt="${escapeHtml(user.name)}" onerror="this.src='https://abs.twimg.com/sticky/default_profile_images/default_profile_400x400.png';">
         ${user.verified ? `<div class="badge-verified-native" style="bottom: 2px; right: 2px;" title="Twitter 官方认证">${ICONS.verifiedNative}</div>` : ''}
-      </div>
+      </a>
       <div class="spotlight-meta">
         <div class="spotlight-name-row">
-          <span class="spotlight-name" title="${escapeHtml(user.name)}">${escapeHtml(user.name)}</span>
+          <a class="spotlight-name" href="https://x.com/${user.screen_name}" target="_blank" rel="noopener noreferrer" onclick="window.trackBloggerClick('${escapeHtml(user.screen_name)}', 'spotlight_name');" title="直达 @${escapeHtml(user.screen_name)} 的 X 个人主页">${escapeHtml(user.name)}</a>
           <span class="card-influence-pill ${isTopTier ? 'top-tier' : ''}">${escapeHtml(tag)}</span>
         </div>
-        <a class="spotlight-handle" href="https://x.com/${user.screen_name}" target="_blank" onclick="window.trackBloggerClick('${escapeHtml(user.screen_name)}', 'card');">@${escapeHtml(user.screen_name)} · ${formatFollowers(user.followers_count)} 关注</a>
+        <a class="spotlight-handle" href="https://x.com/${user.screen_name}" target="_blank" onclick="window.trackBloggerClick('${escapeHtml(user.screen_name)}', 'spotlight_handle');">@${escapeHtml(user.screen_name)} · ${formatFollowers(user.followers_count)} 关注</a>
         <div class="spotlight-bio-snippet">${formatBioWithLinks(user.description)}</div>
       </div>
     `;
@@ -1506,19 +1507,19 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="card-main-content">
         <div class="card-avatar-row">
-          <div class="card-avatar-wrap">
+          <a class="card-avatar-wrap" href="https://x.com/${user.screen_name}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation(); window.trackBloggerClick('${escapeHtml(user.screen_name)}', 'card_avatar');" title="直达 @${escapeHtml(user.screen_name)} 的 X 个人主页">
             <img class="card-avatar-img" src="${avatarSrc}" alt="${escapeHtml(user.name)}" loading="lazy" decoding="async" onerror="handleMediaImgError(this, '${escapeHtml(rawAvatar)}', 'avatar');">
             ${user.verified ? `<div class="badge-verified-native" title="Twitter 官方认证">${ICONS.verifiedNative}</div>` : ''}
-          </div>
+          </a>
         </div>
 
         <div class="card-user-info">
           <div class="card-name-row">
-            <span class="card-user-name" title="${escapeHtml(user.name)}">${escapeHtml(user.name)}</span>
+            <a class="card-user-name" href="https://x.com/${user.screen_name}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation(); window.trackBloggerClick('${escapeHtml(user.screen_name)}', 'card_name');" title="直达 @${escapeHtml(user.screen_name)} 的 X 个人主页">${escapeHtml(user.name)}</a>
             <span class="card-influence-pill ${isTopTier ? 'top-tier' : ''}">${escapeHtml(tierTag)}</span>
             ${statusBadgeHtml}
           </div>
-          <a class="card-user-handle" href="https://x.com/${user.screen_name}" target="_blank" onclick="event.stopPropagation(); window.trackBloggerClick('${escapeHtml(user.screen_name)}', 'card');">@${escapeHtml(user.screen_name)}</a>
+          <a class="card-user-handle" href="https://x.com/${user.screen_name}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation(); window.trackBloggerClick('${escapeHtml(user.screen_name)}', 'card_handle');">@${escapeHtml(user.screen_name)}</a>
           <div class="card-metrics-chip">
             ${ICONS.users}
             <span>${formatFollowers(user.followers_count)} 关注者</span>
@@ -1632,9 +1633,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     rouletteBanner.style.backgroundImage = `url('${coverSrc}')`;
     rouletteAvatar.src = avatarSrc;
+    if (rouletteAvatarLink) {
+      rouletteAvatarLink.href = `https://x.com/${user.screen_name}`;
+      rouletteAvatarLink.onclick = () => window.trackBloggerClick(user.screen_name, 'roulette_avatar');
+    }
     rouletteTag.className = `card-influence-pill ${isTopTier ? 'top-tier' : ''}`;
     rouletteTag.textContent = tierTag;
     rouletteName.textContent = user.name;
+    if (rouletteName) {
+      rouletteName.href = `https://x.com/${user.screen_name}`;
+      rouletteName.onclick = () => window.trackBloggerClick(user.screen_name, 'roulette_name');
+    }
     rouletteVerified.style.display = user.verified ? 'flex' : 'none';
     rouletteHandle.textContent = `@${user.screen_name} · ${formatFollowers(user.followers_count)} 关注者`;
     rouletteBio.innerHTML = formatBioWithLinks(user.description);
@@ -1758,10 +1767,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <!-- Floating Avatar & Tags Row -->
         <div class="polaroid-profile-row">
-          <div class="polaroid-avatar-wrap">
+          <a class="polaroid-avatar-wrap" href="https://x.com/${user.screen_name}" target="_blank" rel="noopener noreferrer" onclick="window.trackBloggerClick('${escapeHtml(user.screen_name)}', 'drawer_avatar');" title="直达 @${escapeHtml(user.screen_name)} 的 X 个人主页">
             <img class="polaroid-avatar-img" src="${avatar}" alt="${escapeHtml(user.name)}" onerror="this.src='https://abs.twimg.com/sticky/default_profile_images/default_profile_400x400.png';">
             ${user.verified ? `<div class="badge-verified-native" title="Twitter 官方认证">${ICONS.verifiedNative}</div>` : ''}
-          </div>
+          </a>
           <div class="polaroid-tags-group">
             ${isSuspended ? `<span class="badge-status-pill suspended">${ICONS.ghost} 已封号</span>` : ''}
             ${isDeleted ? `<span class="badge-status-pill deleted">${ICONS.ghost} 已注销</span>` : ''}
@@ -1771,9 +1780,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <!-- Identity & Handle -->
         <div class="polaroid-name-block">
-          <h2 id="drawer-user-name" class="polaroid-user-name">${escapeHtml(user.name)}</h2>
+          <h2 id="drawer-user-name"><a class="polaroid-user-name" href="https://x.com/${user.screen_name}" target="_blank" rel="noopener noreferrer" onclick="window.trackBloggerClick('${escapeHtml(user.screen_name)}', 'drawer_name');" title="直达 @${escapeHtml(user.screen_name)} 的 X 个人主页">${escapeHtml(user.name)}</a></h2>
           <div class="polaroid-handle-row">
-            <span class="polaroid-handle-text">@${escapeHtml(user.screen_name)}</span>
+            <a class="polaroid-handle-text" href="https://x.com/${user.screen_name}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;" title="访问 X 个人主页">@${escapeHtml(user.screen_name)}</a>
             <button id="btn-copy-handle" class="btn-chip-copy" title="复制 @ID">
               ${ICONS.copy}
               <span>复制 ID</span>
