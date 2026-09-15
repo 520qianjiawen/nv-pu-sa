@@ -532,8 +532,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.trackBloggerClick = trackBloggerClick;
 
-  // ==================== 2. State Store (Default Theme: OLED) ====================
-  const PAGE_SIZE = 12;
+  // ==================== 2. State Store (Time-Based Theme by Default) ====================
+  function getTimeBasedTheme() {
+    const hour = new Date().getHours();
+    return (hour >= 6 && hour < 18) ? 'light' : 'oled';
+  }
+
   const state = {
     rawUsers: [],
     filteredUsers: [],
@@ -543,7 +547,13 @@ document.addEventListener('DOMContentLoaded', () => {
     currentFilter: 'all',
     currentSort: 'followers-desc',
     currentView: 'grid', // 'grid' | 'compact' | 'list'
-    currentTheme: localStorage.getItem('x_archive_v2_theme') || 'oled',
+    currentTheme: (function() {
+      try {
+        const manual = sessionStorage.getItem('x_archive_manual_theme');
+        if (manual === 'light' || manual === 'oled') return manual;
+      } catch (e) {}
+      return getTimeBasedTheme();
+    })(),
     searchQuery: '',
     isShuffling: false,
     isLoadingMore: false
@@ -806,31 +816,35 @@ document.addEventListener('DOMContentLoaded', () => {
     attach3DTilt(heroSpotlightCard, 6);
   }
 
-  // ==================== 4. Pure Icon Dual-Theme Toggle Engine (OLED by Default) ====================
-  function applyTheme(theme) {
+  // ==================== 4. Pure Icon Dual-Theme Toggle Engine (Visitor Local Time) ====================
+  function applyTheme(theme, isManual = false) {
     state.currentTheme = theme === 'light' ? 'light' : 'oled';
     htmlRoot.setAttribute('data-theme', state.currentTheme);
-    localStorage.setItem('x_archive_v2_theme', state.currentTheme);
+    if (isManual) {
+      try {
+        sessionStorage.setItem('x_archive_manual_theme', state.currentTheme);
+      } catch (e) {}
+    }
 
     if (state.currentTheme === 'light') {
       themeIconSun?.classList.remove('hidden');
       themeIconMoon?.classList.add('hidden');
-      themeBtn?.setAttribute('title', '当前: 清爽浅色 · 点击切换为纯黑极简 (OLED) [快捷键: T]');
+      themeBtn?.setAttribute('title', '当前: 清爽浅色 (白昼模式) · 点击切换为纯黑极简 (OLED) [快捷键: T]');
     } else {
       themeIconSun?.classList.add('hidden');
       themeIconMoon?.classList.remove('hidden');
-      themeBtn?.setAttribute('title', '当前: 纯黑极简 · 点击切换为清爽浅色 (Light) [快捷键: T]');
+      themeBtn?.setAttribute('title', '当前: 纯黑极简 (夜间模式) · 点击切换为清爽浅色 (Light) [快捷键: T]');
     }
   }
 
   themeBtn?.addEventListener('click', (e) => {
     triggerClickSpark(e, 8, 'var(--accent-primary)');
     const nextTheme = state.currentTheme === 'oled' ? 'light' : 'oled';
-    applyTheme(nextTheme);
-    showToast(`已切换至 ${nextTheme === 'light' ? '清爽浅色' : '纯黑极简 (OLED)'} 模式`);
+    applyTheme(nextTheme, true);
+    showToast(`已切换至 ${nextTheme === 'light' ? '清爽浅色 (白昼)' : '纯黑极简 (夜间)'} 模式`);
   });
 
-  applyTheme(state.currentTheme);
+  applyTheme(state.currentTheme, false);
 
   // Close Sort menu when clicking outside
   document.addEventListener('click', (e) => {
@@ -1402,73 +1416,31 @@ document.addEventListener('DOMContentLoaded', () => {
       const newCols = getResponsiveColumnCount(state.currentView);
       if (newCols !== activeColCount) {
         activeColCount = newCols;
-        const currentCount = state.renderedCount;
-        state.renderedCount = 0;
-        initMasonryStructure();
-        // Re-render currently rendered cards count
-        const target = Math.max(PAGE_SIZE, currentCount);
-        const total = state.filteredUsers.length;
-        const renderLimit = Math.min(target, total);
-        
-        for (let i = 0; i < renderLimit; i++) {
-          const user = state.filteredUsers[i];
-          const card = createBloggerCardElement(user, i);
-          if (state.currentView === 'list') {
-            bloggerWall.appendChild(card);
-          } else {
-            let shortestCol = state.columnElements[0];
-            let minHeight = shortestCol.offsetHeight;
-            for (let c = 1; c < state.columnElements.length; c++) {
-              const col = state.columnElements[c];
-              if (col.offsetHeight < minHeight) {
-                minHeight = col.offsetHeight;
-                shortestCol = col;
-              }
-            }
-            shortestCol.appendChild(card);
-          }
-        }
-        state.renderedCount = renderLimit;
-        if (state.renderedCount < total) {
-          infiniteSentinel?.classList.remove('hidden');
-        } else {
-          infiniteSentinel?.classList.add('hidden');
-        }
+        renderAllCards();
       }
     }, 180);
   });
 
-  function renderMoreCards() {
+  function renderAllCards() {
+    infiniteSentinel?.classList.add('hidden');
+
     if (state.rawUsers.length === 0) {
       emptyStateDb?.classList.remove('hidden');
       emptyStateSearch?.classList.add('hidden');
-      infiniteSentinel?.classList.add('hidden');
       return;
     }
     emptyStateDb?.classList.add('hidden');
 
     if (state.filteredUsers.length === 0) {
       emptyStateSearch?.classList.remove('hidden');
-      infiniteSentinel?.classList.add('hidden');
       return;
     }
     emptyStateSearch?.classList.add('hidden');
 
+    initMasonryStructure();
+
     const totalFiltered = state.filteredUsers.length;
-    const startIndex = state.renderedCount;
-    const endIndex = Math.min(startIndex + PAGE_SIZE, totalFiltered);
-
-    if (startIndex >= totalFiltered) {
-      infiniteSentinel?.classList.add('hidden');
-      return;
-    }
-
-    if (state.columnElements.length === 0) {
-      initMasonryStructure();
-    }
-
-    // Surgical Incremental Append: Append new card directly into shortest column without disturbing existing cards
-    for (let i = startIndex; i < endIndex; i++) {
+    for (let i = 0; i < totalFiltered; i++) {
       const user = state.filteredUsers[i];
       const card = createBloggerCardElement(user, i);
 
@@ -1490,14 +1462,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    state.renderedCount = endIndex;
-
-    if (state.renderedCount < totalFiltered) {
-      infiniteSentinel?.classList.remove('hidden');
-    } else {
-      infiniteSentinel?.classList.add('hidden');
-    }
+    state.renderedCount = totalFiltered;
   }
+
+  const renderMoreCards = renderAllCards;
 
   function createBloggerCardElement(user, idx) {
     const card = document.createElement('div');
@@ -1595,19 +1563,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return card;
   }
 
-  // Infinite Scroll Listener
-  window.addEventListener('scroll', () => {
-    if (state.isLoadingMore) return;
-    if (state.renderedCount >= state.filteredUsers.length) return;
-
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 600) {
-      state.isLoadingMore = true;
-      setTimeout(() => {
-        renderMoreCards();
-        state.isLoadingMore = false;
-      }, 150);
-    }
-  });
+  // Infinite scroll listener removed per user request
 
   // ==================== 9. Frameless Slot Machine Decelerating Random Roulette Modal ====================
   function startRandomRouletteShuffle() {
@@ -2091,8 +2047,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === '3') document.querySelector('[data-view="list"]')?.click();
       if (e.key === 't' || e.key === 'T') {
         const nextTheme = state.currentTheme === 'oled' ? 'light' : 'oled';
-        applyTheme(nextTheme);
-        showToast(`已切换至 ${nextTheme === 'light' ? '清爽浅色' : '纯黑极简 (OLED)'} 模式`);
+        applyTheme(nextTheme, true);
+        showToast(`已切换至 ${nextTheme === 'light' ? '清爽浅色 (白昼)' : '纯黑极简 (夜间)'} 模式`);
       }
     }
   });

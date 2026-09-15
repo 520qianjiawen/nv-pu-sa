@@ -11,8 +11,23 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Synchronous Time-Based Theme Detector (Visitor Local Time) -->
+  <script>
+    (function() {
+      try {
+        var manual = sessionStorage.getItem('x_archive_manual_theme');
+        if (manual === 'light' || manual === 'oled') {
+          document.documentElement.setAttribute('data-theme', manual);
+          return;
+        }
+      } catch (e) {}
+      var h = new Date().getHours();
+      var t = (h >= 6 && h < 18) ? 'light' : 'oled';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   
-  <link rel="stylesheet" href="/style.css?v=3.0">
+  <link rel="stylesheet" href="/style.css?v=3.1">
 </head>
 <body>
 
@@ -255,12 +270,6 @@
           <div class="card-skeleton"></div>
           <div class="card-skeleton"></div>
           <div class="card-skeleton"></div>
-        </div>
-
-        <!-- Infinite Scroll Sentinel Indicator -->
-        <div id="infinite-scroll-sentinel" class="infinite-scroll-loading hidden">
-          <div class="infinite-spinner"></div>
-          <span>加载更多博主中...</span>
         </div>
 
         <!-- Empty State 1: Database Empty -->

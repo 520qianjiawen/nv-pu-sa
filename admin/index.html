@@ -13,8 +13,23 @@
   
   <!-- Chart.js 4.4.x for High-Performance Dark/Light Visualizations -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <!-- Synchronous Time-Based Theme Detector (Visitor Local Time) -->
+  <script>
+    (function() {
+      try {
+        var manual = sessionStorage.getItem('x_archive_manual_theme');
+        if (manual === 'light' || manual === 'oled') {
+          document.documentElement.setAttribute('data-theme', manual);
+          return;
+        }
+      } catch (e) {}
+      var h = new Date().getHours();
+      var t = (h >= 6 && h < 18) ? 'light' : 'oled';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   
-  <link rel="stylesheet" href="/style.css?v=2.6">
+  <link rel="stylesheet" href="/style.css?v=3.1">
 </head>
 <body>
 
