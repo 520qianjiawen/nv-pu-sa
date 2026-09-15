@@ -1,0 +1,9 @@
+{
+  "name": "nv-pu-sa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "女菩萨 · X 博主精选画廊与备份系统",
+  "scripts": {
+    "start": "npx serve ."
+  }
+}
